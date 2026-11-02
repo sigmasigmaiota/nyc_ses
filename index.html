@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NYC SES Diversity Explorer</title>
+<meta name="description" content="Interactive maps, charts and tables comparing three measures of neighborhood income diversity (ICE, income entropy, low x high income) with income and race/ethnicity across NYC, Nassau, Suffolk and Westchester census tracts.">
+<link rel="stylesheet" href="vendor/leaflet.css">
+<link rel="stylesheet" href="css/app.css">
+</head>
+<body>
+<header class="app-header">
+  <h1>NYC SES Diversity Explorer</h1>
+  <span class="sub" id="subtitle">Census tracts in the five boroughs, Nassau, Suffolk and Westchester</span>
+  <nav>
+    <a href="#methods" data-tab-link="methods">Methods</a>
+    <a href="https://github.com/sigmasigmaiota/nyc_ses" target="_blank" rel="noopener">GitHub</a>
+    <button class="btn" id="theme-toggle" type="button" aria-label="Toggle dark mode">Theme</button>
+  </nav>
+</header>
+
+<div class="layout">
+  <aside class="panel sidebar" aria-label="Controls">
+    <div class="control-group">
+      <label for="area">Area</label>
+      <select id="area"></select>
+    </div>
+    <div class="control-group">
+      <span class="group-title">Maps</span>
+      <div class="seg" role="group" aria-label="Map layout">
+        <button type="button" data-layout="single" aria-pressed="false">One map</button>
+        <button type="button" data-layout="compare" aria-pressed="true">Compare two</button>
+      </div>
+    </div>
+    <div class="control-group">
+      <span class="group-title">Quick comparisons</span>
+      <select id="preset" aria-label="Quick comparison">
+        <option value="">Choose a pairing…</option>
+        <option value="ice_inc|med_inc">M1 ICE vs. median income</option>
+        <option value="entropy|med_inc">M2 entropy vs. median income</option>
+        <option value="bivar|ice_inc">M3 low × high vs. M1 ICE</option>
+        <option value="bivar|entropy">M3 low × high vs. M2 entropy</option>
+        <option value="ice_inc|race_largest">M1 ICE vs. largest race/ethnic group</option>
+        <option value="bivar|race_largest">M3 low × high vs. largest race/ethnic group</option>
+        <option value="ice_race|ice_inc">ICE race + income vs. ICE income</option>
+      </select>
+    </div>
+
+    <div class="settings">
+      <span class="group-title">Method settings</span>
+      <div class="row">
+        <div class="control-group">
+          <label for="lowcut">Low income: under</label>
+          <select id="lowcut"></select>
+        </div>
+        <div class="control-group">
+          <label for="highcut">High income: at least</label>
+          <select id="highcut"></select>
+        </div>
+      </div>
+      <div class="hint" id="us-shares"></div>
+      <div class="control-group">
+        <label for="tier">M3 middle tier: US share ± <span id="tier-val">5</span> pts</label>
+        <input type="range" id="tier" min="2" max="10" step="0.5" value="5">
+      </div>
+      <div class="control-group">
+        <label for="egroups">M2 entropy groups</label>
+        <select id="egroups">
+          <option value="q5">5 groups: &lt;$30k, $30–60k, $60–100k, $100–150k, $150k+</option>
+          <option value="lmh">3 groups: low / middle / high (your cut points)</option>
+          <option value="all16">All 16 ACS brackets</option>
+        </select>
+      </div>
+      <label class="check"><input type="checkbox" id="flag" checked> Outline unreliable estimates</label>
+      <label class="check"><input type="checkbox" id="basemap" checked> Show basemap</label>
+      <button class="btn" id="reset" type="button">Reset to report defaults</button>
+    </div>
+  </aside>
+
+  <main>
+    <section class="maps compare" id="maps">
+      <div class="panel map-card">
+        <div class="map-head"><select id="measure-a" aria-label="Left map measure"></select></div>
+        <div class="map" id="map-a" role="region" aria-label="Map A"></div>
+        <div class="legend" id="legend-a"></div>
+      </div>
+      <div class="panel map-card" id="card-b">
+        <div class="map-head"><select id="measure-b" aria-label="Right map measure"></select></div>
+        <div class="map" id="map-b" role="region" aria-label="Map B"></div>
+        <div class="legend" id="legend-b"></div>
+      </div>
+    </section>
+
+    <section class="panel detail" id="detail" aria-live="polite"></section>
+
+    <section class="panel explain" id="explain"></section>
+
+    <section class="panel snapshot" id="snapshot"></section>
+
+    <section class="panel tabs">
+      <div class="tablist" role="tablist">
+        <button role="tab" aria-selected="true" data-tab="scatter">Scatterplot</button>
+        <button role="tab" aria-selected="false" data-tab="lowhigh">Low vs. high income</button>
+        <button role="tab" aria-selected="false" data-tab="table">Area summary table</button>
+        <button role="tab" aria-selected="false" data-tab="methods" id="tab-methods">Methods &amp; sources</button>
+      </div>
+
+      <div class="tabpanel" data-panel="scatter" role="tabpanel">
+        <div class="chart-controls">
+          <label>Method (y) <select id="sc-y"></select></label>
+          <label>Compared with (x) <select id="sc-x"></select></label>
+          <span id="sc-rho"></span>
+        </div>
+        <div class="chart-legend" id="sc-legend"></div>
+        <div id="scatter"></div>
+        <p class="chart-note">Each point is a census tract in the selected area. The dark line is the median of the method within each tenth of the x-axis values. ρ is Spearman's rank correlation over the area's tracts. Click a point to select the tract on the maps.</p>
+      </div>
+
+      <div class="tabpanel" data-panel="lowhigh" role="tabpanel" hidden>
+        <div class="chart-controls">
+          <label>Color points by <select id="lh-color">
+            <option value="focus">Focus area</option>
+            <option value="entropy">M2 income entropy</option>
+          </select></label>
+        </div>
+        <div class="chart-legend" id="lh-legend"></div>
+        <div id="lowhigh"></div>
+        <p class="chart-note">This chart shows all three methods at once. Background colors are the M3 classes. Dashed diagonals are lines of equal ICE, since ICE is the high-income share minus the low-income share. Point color can show M2 entropy. Tracts in the lower left are middle-income, the upper right is mixed, and the other two corners are concentrated at one end.</p>
+      </div>
+
+      <div class="tabpanel" data-panel="table" role="tabpanel" hidden>
+        <div class="chart-controls">
+          <span>Pooled across all tracts in each area, recomputed with the current method settings. Click a column header to sort.</span>
+          <button class="btn" id="dl-csv" type="button">Download CSV</button>
+        </div>
+        <div class="table-wrap"><table class="summary" id="summary"></table></div>
+        <p class="chart-note">Theil's H runs from 0 (every tract has the area's overall mix) to 1 (each tract holds a single group). "HH in … tracts" is the share of the area's households living in tracts of that M3 class.</p>
+      </div>
+
+      <div class="tabpanel methods" data-panel="methods" role="tabpanel" hidden id="methods-panel"></div>
+    </section>
+  </main>
+</div>
+<footer class="app-footer" id="footer"></footer>
+<div class="tooltip" id="tooltip" role="tooltip"></div>
+
+<script src="vendor/leaflet.js"></script>
+<script src="data/ses_app_data.js"></script>
+<script src="js/app.js"></script>
+</body>
+</html>
