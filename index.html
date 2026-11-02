@@ -20,62 +20,78 @@
 </header>
 
 <div class="layout">
-  <aside class="panel sidebar" aria-label="Controls">
-    <div class="control-group">
-      <label for="area">Area</label>
-      <select id="area"></select>
-    </div>
-    <div class="control-group">
-      <span class="group-title">Maps</span>
-      <div class="seg" role="group" aria-label="Map layout">
-        <button type="button" data-layout="single" aria-pressed="false">One map</button>
-        <button type="button" data-layout="compare" aria-pressed="true">Compare two</button>
+  <section class="panel toolbar" aria-label="Controls">
+    <div class="tb-section">
+      <h2 class="tb-title">View</h2>
+      <div class="tb-row">
+        <div class="ctl">
+          <label for="area">Area</label>
+          <select id="area"></select>
+        </div>
+        <div class="ctl ctl-fixed">
+          <span class="ctl-label" id="maps-label">Maps</span>
+          <div class="seg" role="group" aria-labelledby="maps-label">
+            <button type="button" data-layout="single" aria-pressed="false">One map</button>
+            <button type="button" data-layout="compare" aria-pressed="true">Compare two</button>
+          </div>
+        </div>
+        <div class="ctl ctl-wide">
+          <label for="preset">Quick comparisons</label>
+          <select id="preset">
+            <option value="">Choose a pairing…</option>
+            <optgroup label="Methods vs. plain income">
+              <option value="ice_inc|med_inc">M1 ICE vs. median income</option>
+              <option value="entropy|med_inc">M2 entropy vs. median income</option>
+            </optgroup>
+            <optgroup label="Methods vs. each other">
+              <option value="bivar|ice_inc">M3 low × high vs. M1 ICE</option>
+              <option value="bivar|entropy">M3 low × high vs. M2 entropy</option>
+              <option value="ice_race|ice_inc">ICE race + income vs. ICE income</option>
+            </optgroup>
+            <optgroup label="Methods vs. race/ethnicity">
+              <option value="ice_inc|race_largest">M1 ICE vs. largest race/ethnic group</option>
+              <option value="bivar|race_largest">M3 low × high vs. largest race/ethnic group</option>
+            </optgroup>
+          </select>
+        </div>
       </div>
     </div>
-    <div class="control-group">
-      <span class="group-title">Quick comparisons</span>
-      <select id="preset" aria-label="Quick comparison">
-        <option value="">Choose a pairing…</option>
-        <option value="ice_inc|med_inc">M1 ICE vs. median income</option>
-        <option value="entropy|med_inc">M2 entropy vs. median income</option>
-        <option value="bivar|ice_inc">M3 low × high vs. M1 ICE</option>
-        <option value="bivar|entropy">M3 low × high vs. M2 entropy</option>
-        <option value="ice_inc|race_largest">M1 ICE vs. largest race/ethnic group</option>
-        <option value="bivar|race_largest">M3 low × high vs. largest race/ethnic group</option>
-        <option value="ice_race|ice_inc">ICE race + income vs. ICE income</option>
-      </select>
-    </div>
 
-    <div class="settings">
-      <span class="group-title">Method settings</span>
-      <div class="row">
-        <div class="control-group">
+    <div class="tb-section">
+      <h2 class="tb-title">Method settings</h2>
+      <div class="tb-row">
+        <div class="ctl ctl-narrow">
           <label for="lowcut">Low income: under</label>
           <select id="lowcut"></select>
         </div>
-        <div class="control-group">
+        <div class="ctl ctl-narrow">
           <label for="highcut">High income: at least</label>
           <select id="highcut"></select>
         </div>
+        <div class="ctl">
+          <label for="tier">M3 middle tier: US share ± <span id="tier-val">5</span> pts</label>
+          <input type="range" id="tier" min="2" max="10" step="0.5" value="5">
+        </div>
+        <div class="ctl ctl-wide">
+          <label for="egroups">M2 entropy groups</label>
+          <select id="egroups">
+            <option value="q5">5 groups (report default)</option>
+            <option value="lmh">3 groups: low / middle / high</option>
+            <option value="all16">16 ACS brackets</option>
+          </select>
+        </div>
+        <div class="ctl ctl-fixed ctl-options">
+          <span class="ctl-label">Display</span>
+          <label class="check"><input type="checkbox" id="flag" checked> Outline unreliable estimates</label>
+          <label class="check"><input type="checkbox" id="basemap" checked> Show basemap</label>
+        </div>
+        <div class="ctl ctl-fixed ctl-reset">
+          <button class="btn" id="reset" type="button">Reset to report defaults</button>
+        </div>
       </div>
-      <div class="hint" id="us-shares"></div>
-      <div class="control-group">
-        <label for="tier">M3 middle tier: US share ± <span id="tier-val">5</span> pts</label>
-        <input type="range" id="tier" min="2" max="10" step="0.5" value="5">
-      </div>
-      <div class="control-group">
-        <label for="egroups">M2 entropy groups</label>
-        <select id="egroups">
-          <option value="q5">5 groups: &lt;$30k, $30–60k, $60–100k, $100–150k, $150k+</option>
-          <option value="lmh">3 groups: low / middle / high (your cut points)</option>
-          <option value="all16">All 16 ACS brackets</option>
-        </select>
-      </div>
-      <label class="check"><input type="checkbox" id="flag" checked> Outline unreliable estimates</label>
-      <label class="check"><input type="checkbox" id="basemap" checked> Show basemap</label>
-      <button class="btn" id="reset" type="button">Reset to report defaults</button>
+      <p class="hint" id="us-shares"></p>
     </div>
-  </aside>
+  </section>
 
   <main>
     <section class="maps compare" id="maps">
